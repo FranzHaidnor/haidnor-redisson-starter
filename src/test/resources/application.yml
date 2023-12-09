@@ -1,0 +1,28 @@
+# Redis 单机模式
+#spring:
+#  application:
+#    name: haidnor-redisson-test
+#  data:
+#    redis:
+#      database: 0
+#      port: 6379
+#      host: 127.0.0.1
+#      password: root
+
+# Redis 集群模式
+spring:
+  application:
+    name: haidnor-redisson-test
+  data:
+    redis:
+      jedis:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-wait: -1
+      sentinel:
+        master: mymaster
+        nodes: 192.168.12.198:26379,192.168.12.198:26378,192.168.12.198:26377
+
+server:
+  port: 8080
