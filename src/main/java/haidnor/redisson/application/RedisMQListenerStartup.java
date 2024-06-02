@@ -1,8 +1,8 @@
 package haidnor.redisson.application;
 
-import haidnor.redisson.annotation.RedisDMQListener;
-import haidnor.redisson.annotation.RedisMQConfiguration;
+import haidnor.redisson.annotation.RedisDMQHandler;
 import haidnor.redisson.annotation.RedisMQListener;
+import haidnor.redisson.annotation.RedisMQHandler;
 import haidnor.redisson.util.DefaultRedisMQExecutorService;
 import haidnor.redisson.util.QueueUtil;
 import org.redisson.api.RBlockingQueue;
@@ -43,14 +43,14 @@ public class RedisMQListenerStartup implements ApplicationRunner {
      */
     @Override
     public void run(ApplicationArguments applicationArguments) {
-        String[] beanNames = applicationContext.getBeanNamesForAnnotation(RedisMQConfiguration.class);
+        String[] beanNames = applicationContext.getBeanNamesForAnnotation(RedisMQListener.class);
         for (String beanName : beanNames) {
             Object bean = applicationContext.getBean(beanName);
             Class<?> clazz = bean.getClass();
             Method[] methods = clazz.getMethods();
             for (Method method : methods) {
                 // 注册延迟队列监听器 (使用 AnnotationUtils.findAnnotation(Method method, Class<A> annotationType) 是为了避免 cglib 代理后无法从方法上获取自定义注解)
-                RedisDMQListener dmsAnnotation = AnnotationUtils.findAnnotation(method, RedisDMQListener.class);
+                RedisDMQHandler dmsAnnotation = AnnotationUtils.findAnnotation(method, RedisDMQHandler.class);
                 if (dmsAnnotation != null) {
                     startDelayedMessageQueueListener(dmsAnnotation.destination(), dmsAnnotation.listenerNum(), dmsAnnotation.executorService(), msg -> {
                         try {
@@ -62,7 +62,7 @@ public class RedisMQListenerStartup implements ApplicationRunner {
                     log.info("Register redis delayed message queue listener. Class:{} Method:{} Destination:{}", clazz.getName(), method.getName(), QueueUtil.modifyQueueName(dmsAnnotation.destination()));
                 }
                 // 注册普通消息队列监听器
-                RedisMQListener msAnnotation = AnnotationUtils.findAnnotation(method, RedisMQListener.class);
+                RedisMQHandler msAnnotation = AnnotationUtils.findAnnotation(method, RedisMQHandler.class);
                 if (msAnnotation != null) {
                     startMessageQueueListener(msAnnotation.destination(), msAnnotation.listenerNum(), msAnnotation.executorService(), msg -> {
                         try {

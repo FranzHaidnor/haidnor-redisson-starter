@@ -132,10 +132,11 @@ public class MQProducer {
 }
 ```
 **消息队列消费者示例**
+
 ```java
-import haidnor.redisson.annotation.RedisDMQListener;
-import haidnor.redisson.annotation.RedisMQConfiguration;
+import haidnor.redisson.annotation.RedisDMQHandler;
 import haidnor.redisson.annotation.RedisMQListener;
+import haidnor.redisson.annotation.RedisMQHandler;
 import org.springframework.stereotype.Service;
 
 /**
@@ -143,38 +144,38 @@ import org.springframework.stereotype.Service;
  *
  * 添加 @RedisMQConfiguration 注解标记此类为 Redis 消息队列监听者
  */
-@RedisMQConfiguration
+@RedisMQListener
 @Service
 public class MQConsumer {
 
     /**
      * 普通消息队列消息监听器
-     * 
+     *
      * 参数类型 Message 可以是其它自定义对象, 需要和投递的消息类型保持一致
      */
-    @RedisMQListener(destination = "general_msg_queue")
+    @RedisMQHandler(destination = "general_msg_queue")
     public void msgConsumer(Message msg) {
         System.out.println(msg);
     }
 
     /**
      * 延迟消息队列消息监听器
-     * 
+     *
      * 参数类型 Message 可以是其它自定义对象, 需要和投递的消息类型保持一致
      */
-    @RedisDMQListener(destination = "delay_msg_queue")
+    @RedisDMQHandler(destination = "delay_msg_queue")
     public void delayMsgConsumer(Message msg) {
         System.out.println(msg);
     }
-    
+
 }
 ```
 注意:   
-1. 编写消息队列消费者的类必须加上 `@RedisMQConfiguration` 注解后才能监听消息生效。原理是 SpringBoot 启动后会扫描含有其注解标记的类，为此类自动生成代理对象。
-2. 普通消息队列监听方法需要标记注解 `@RedisMQListener`, 延迟消息队列监听方法需要标记注解 `@RedisDMQListener`。两者请勿混淆使用。
+1. 编写消息队列消费者的类必须加上 `@RedisMQListener` 注解后才能监听消息生效。原理是 SpringBoot 启动后会扫描含有其注解标记的类，为此类自动生成代理对象。
+2. 普通消息队列监听方法需要标记注解 `@RedisMQHandler`, 延迟消息队列监听方法需要标记注解 `@RedisDMQHandler`。两者请勿混淆使用。
 
 **消息队消费者的高级使用方式**  
-`@RedisMQListener`和`@RedisDMQListener` 共有三个参数可填
+`@RedisMQHandler`和`@RedisDMQHandler` 共有三个参数可填
 1. `destination` 消息队列名称(必填)
 2. `listenerNum` 监听消息队列的线程数，默认值 “1”。 复写此参数值不可小于 1
 3. `executorService` 消费者使用的线程池 (Spring Bean 的名称)，默认值 “defaultRedisMQExecutorService”。
@@ -209,20 +210,22 @@ public class RedisMQExecutorServiceConfig {
 }
 ```
 让消费者使用此线程池
+
 ```java
+import haidnor.redisson.annotation.RedisDMQHandler;
 import haidnor.redisson.annotation.RedisDMQListener;
-import haidnor.redisson.annotation.RedisMQConfiguration;
 import haidnor.redisson.annotation.RedisMQListener;
+import haidnor.redisson.annotation.RedisMQHandler;
 import org.springframework.stereotype.Service;
 
-@RedisMQConfiguration
+@RedisMQListener
 @Service
 public class MQConsumer {
 
     /**
      * 普通消息队列消息监听器
      */
-    @RedisMQListener(destination = "general_msg_queue", executorService = "singletonThreadExecutor")
+    @RedisMQHandler(destination = "general_msg_queue", executorService = "singletonThreadExecutor")
     public void msgConsumer(Message msg) {
         System.out.println(msg);
     }
@@ -230,10 +233,10 @@ public class MQConsumer {
     /**
      * 延迟消息队列消息监听器
      */
-    @RedisDMQListener(destination = "delay_msg_queue", executorService = "singletonThreadExecutor")
+    @RedisDMQHandler(destination = "delay_msg_queue", executorService = "singletonThreadExecutor")
     public void delayMsgConsumer(Message msg) {
         System.out.println(msg);
     }
-    
+
 }
 ```

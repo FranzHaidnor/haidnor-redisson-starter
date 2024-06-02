@@ -1,8 +1,8 @@
 package haidnor.test;
 
-import haidnor.redisson.annotation.RedisDMQListener;
-import haidnor.redisson.annotation.RedisMQConfiguration;
+import haidnor.redisson.annotation.RedisDMQHandler;
 import haidnor.redisson.annotation.RedisMQListener;
+import haidnor.redisson.annotation.RedisMQHandler;
 import org.springframework.stereotype.Service;
 
 /**
@@ -10,14 +10,14 @@ import org.springframework.stereotype.Service;
  * <p>
  * 添加 @RedisMQConfiguration 注解标记此类为 Redis 消息队列监听者
  */
-@RedisMQConfiguration
+@RedisMQListener
 @Service
 public class MQConsumer {
 
     /**
      * 普通消息队列消息监听器
      */
-    @RedisMQListener(destination = "general_msg_queue")
+    @RedisMQHandler(destination = "general_msg_queue")
     public void msgConsumer(Message msg) {
         System.out.println(msg);
     }
@@ -25,7 +25,7 @@ public class MQConsumer {
     /**
      * 延迟消息队列消息监听器
      */
-    @RedisDMQListener(destination = "delay_msg_queue")
+    @RedisDMQHandler(destination = "delay_msg_queue")
     public void delayMsgConsumer(Message msg) {
         System.out.println(msg);
     }

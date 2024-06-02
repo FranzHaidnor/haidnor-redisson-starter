@@ -8,6 +8,8 @@ import org.redisson.codec.JsonJacksonCodec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,6 +23,10 @@ public class RedisMQService {
     @Autowired
     private RedissonClient redisson;
 
+    private final Map<String, RBlockingQueue<Object>> blockingQueueMap = new ConcurrentHashMap<>(16);
+
+    private final Map<String, RDelayedQueue<Object>> delayedQueueMap = new ConcurrentHashMap<>(16);
+
     /**
      * 发送普通消息到消息队列
      *
@@ -28,9 +34,11 @@ public class RedisMQService {
      * @param msg       任务对象
      */
     public <T> boolean send(String queueName, T msg) {
-        String destination = QueueUtil.modifyQueueName(queueName);
-        RBlockingQueue<T> blockingFairQueue = redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
-        return blockingFairQueue.offer(msg);
+        RBlockingQueue<Object> blockingQueue = blockingQueueMap.computeIfAbsent(queueName, k -> {
+            String destination = QueueUtil.modifyQueueName(k);
+            return redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
+        });
+        return blockingQueue.offer(msg);
     }
 
     /**
@@ -44,11 +52,12 @@ public class RedisMQService {
      * @param timeUnit  时间单位
      */
     public <T> void send(String queueName, T msg, long delayTime, TimeUnit timeUnit) {
-        String destination = QueueUtil.modifyQueueName(queueName);
-        RBlockingQueue<T> blockingFairQueue = redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
-        RDelayedQueue<T> delayedQueue = redisson.getDelayedQueue(blockingFairQueue);
+        RDelayedQueue<Object> delayedQueue = delayedQueueMap.computeIfAbsent(queueName, s -> {
+            String destination = QueueUtil.modifyQueueName(queueName);
+            RBlockingQueue<Object> blockingFairQueue = redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
+            return redisson.getDelayedQueue(blockingFairQueue);
+        });
         delayedQueue.offer(msg, delayTime, timeUnit);
-        delayedQueue.destroy();
     }
 
 }

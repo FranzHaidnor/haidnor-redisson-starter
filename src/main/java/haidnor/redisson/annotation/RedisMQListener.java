@@ -1,28 +1,17 @@
 package haidnor.redisson.annotation;
 
+import org.springframework.stereotype.Component;
+
 import java.lang.annotation.*;
 
 /**
- * Redis 普通消息队列监听器
+ * Redis 标记此类为 Redis MQ Service
+ * 告知 RMSListenerStartup 扫描并注册此类下的 RedisMSListener, RedisDMSListener
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Component
 public @interface RedisMQListener {
-
-    /**
-     * The destination name for this listener, resolved through the container-wide
-     */
-    String destination();
-
-    /**
-     * 表示监听消息队列的线程数. 此参数值不可小于 1
-     */
-    int listenerNum() default 1;
-
-    /**
-     * 消息队列消费者使用的线程池
-     */
-    String executorService() default "defaultRedisMQExecutorService";
 
 }

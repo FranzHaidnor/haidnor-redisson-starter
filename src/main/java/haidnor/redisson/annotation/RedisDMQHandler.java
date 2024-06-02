@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface RedisDMQListener {
+public @interface RedisDMQHandler {
 
     /**
      * The destination name for this listener, resolved through the container-wide
