@@ -5,13 +5,13 @@ import haidnor.redisson.core.RedisLock;
 import haidnor.redisson.core.RedisMQService;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RKeys;
-import org.redisson.api.RLock;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @SpringBootTest(classes = {SpringBootTestMainApplication.class})
@@ -40,15 +40,6 @@ public class RedissonTest {
     }
 
     @Test
-    public void test_() throws Exception {
-        for (long i = 0; i < 123; i++) {
-            redisLock.lock("LOCK_TEST", 1, TimeUnit.MILLISECONDS, () -> {
-                System.out.println("hello");
-            });
-        }
-    }
-
-    @Test
     public void test_1() throws Exception {
         RScoredSortedSet<String> zset = redisson.getScoredSortedSet("ScoredSortedSet_TEST");
         zset.add(1D, "1");
@@ -70,23 +61,26 @@ public class RedissonTest {
     }
 
     @Test
-    public void test_4() throws Exception {
-        Iterable<Object> list = new ArrayList<>();
-        for (Object o : list) {
-        }
+    public void test_() throws Exception {
+        HashMap<Object, Object> msg = new HashMap<>();
+        msg.put("name", "张三");
+        msg.put("age", 18);
 
-        Iterable<String> keys = redisson.getKeys().getKeys();
-        for (String key : keys) {
-            System.out.println(key);
+        for (int i = 0; i < 100; i++) {
+            redisMQService.send("test_queue", msg);
         }
     }
 
     @Test
-    public void test_5() throws Exception {
-        RLock lock = redisson.getLock("lock");
-        if (lock.tryLock(1, TimeUnit.DAYS)) {
-            System.out.println("1");
+    public void test_delayedQueue() throws Exception {
+        HashMap<Object, Object> msg = new HashMap<>();
+        msg.put("name", "张三");
+        msg.put("age", 18);
+        for (int i = 0; i < 100; i++) {
+            redisMQService.send("test_queue", msg, 10, TimeUnit.SECONDS);
         }
+
+        new CompletableFuture<>().get();
     }
 
 }

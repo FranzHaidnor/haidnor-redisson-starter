@@ -5,6 +5,8 @@ import haidnor.redisson.annotation.RedisMQListener;
 import haidnor.redisson.annotation.RedisMQHandler;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 /**
  * Redis 消息队列消费者
  * <p>
@@ -27,6 +29,14 @@ public class MQConsumer {
      */
     @RedisDMQHandler(destination = "delay_msg_queue")
     public void delayMsgConsumer(Message msg) {
+        System.out.println(msg);
+    }
+
+    /**
+     * 延迟消息队列消息监听器
+     */
+    @RedisDMQHandler(destination = "test_queue")
+    public void delayMsgConsumer1(Map msg) {
         System.out.println(msg);
     }
 

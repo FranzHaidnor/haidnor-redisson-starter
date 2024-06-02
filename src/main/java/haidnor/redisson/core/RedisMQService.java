@@ -54,8 +54,11 @@ public class RedisMQService {
     public <T> void send(String queueName, T msg, long delayTime, TimeUnit timeUnit) {
         RDelayedQueue<Object> delayedQueue = delayedQueueMap.computeIfAbsent(queueName, s -> {
             String destination = QueueUtil.modifyQueueName(queueName);
-            RBlockingQueue<Object> blockingFairQueue = redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
-            return redisson.getDelayedQueue(blockingFairQueue);
+            RBlockingQueue<Object> blockingQueue = redisson.getBlockingQueue(destination, JsonJacksonCodec.INSTANCE);
+            RDelayedQueue<Object> queue = redisson.getDelayedQueue(blockingQueue);
+            // 生产者无需做转移队列数据的任务
+            queue.destroy();
+            return queue;
         });
         delayedQueue.offer(msg, delayTime, timeUnit);
     }
